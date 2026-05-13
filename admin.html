@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCare Pro — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0a5c4a;
+    --primary-light: #1a8a6e;
+    --accent: #e8f5f1;
+    --gold: #c9973d;
+    --dark: #0d1a14;
+    --sidebar-bg: #0f2318;
+    --sidebar-hover: rgba(26,138,110,0.18);
+    --sidebar-active: rgba(26,138,110,0.3);
+    --text: #1a2e24;
+    --text-muted: #5a7065;
+    --border: #d0e4dc;
+    --bg: #f4faf7;
+    --white: #ffffff;
+    --danger: #c0392b;
+    --warning: #c9973d;
+    --success: #1a8a6e;
+    --card-shadow: 0 2px 12px rgba(10,92,74,0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #0d1a14 0%, #0a5c4a 100%);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .login-box {
+    background: white; border-radius: 20px; padding: 3rem; width: 420px; max-width: 95%;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+  }
+  .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+  .login-logo .cross { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: 700; }
+  .login-logo span { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--primary); }
+  .login-box h2 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .login-box p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem; }
+  .login-box .form-group { margin-bottom: 14px; }
+  .login-box label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+  .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; transition: border-color 0.2s; }
+  .login-box input:focus { outline: none; border-color: var(--primary); }
+  .login-box .err { color: var(--danger); font-size: 0.82rem; margin-top: 8px; display: none; }
+  .login-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 6px; transition: background 0.2s; }
+  .login-btn:hover { background: var(--primary-light); }
+  .login-hint { text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 1rem; }
+  .login-hint strong { color: var(--primary); }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 240px; background: var(--sidebar-bg); min-height: 100vh;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 100; transition: width 0.25s;
+  }
+  #sidebar.collapsed { width: 64px; }
+  .sidebar-logo { padding: 1.5rem 1.2rem; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .sidebar-logo .cross { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+  .sidebar-logo .brand { font-family: 'Playfair Display', serif; color: white; font-size: 1.1rem; white-space: nowrap; overflow: hidden; }
+  .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+  .nav-section { padding: 0.5rem 0; }
+  .nav-section-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); padding: 0.5rem 1.2rem; white-space: nowrap; overflow: hidden; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 1.2rem;
+    color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s;
+    border-left: 3px solid transparent; text-decoration: none; white-space: nowrap;
+  }
+  .nav-item:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: var(--sidebar-active); color: #7dd4b8; border-left-color: #7dd4b8; }
+  .nav-item .nav-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+  .nav-item .nav-label { font-size: 0.88rem; font-weight: 500; overflow: hidden; }
+  .nav-item .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; }
+  .sidebar-footer { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.07); }
+  .sidebar-user { display: flex; align-items: center; gap: 10px; }
+  .su-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+  .su-info .su-name { font-size: 0.85rem; color: white; font-weight: 500; white-space: nowrap; }
+  .su-info .su-role { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+  #toggleSidebar { background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 1rem; margin-left: auto; }
+
+  /* ── MAIN CONTENT ── */
+  #mainContent { margin-left: 240px; flex: 1; transition: margin-left 0.25s; min-height: 100vh; }
+  #mainContent.expanded { margin-left: 64px; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: white; border-bottom: 1px solid var(--border);
+    padding: 0 2rem; height: 64px; display: flex; align-items: center; gap: 1rem;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar h1 { font-size: 1.15rem; font-weight: 600; flex: 1; }
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+  .topbar-search { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; gap: 8px; }
+  .topbar-search input { border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; width: 180px; }
+  .topbar-search input:focus { outline: none; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; position: relative; transition: background 0.2s; }
+  .icon-btn:hover { background: var(--bg); }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+  .logout-btn { padding: 8px 16px; background: #fee; border: 1px solid #fcc; border-radius: 8px; color: var(--danger); font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .logout-btn:hover { background: #fdd; }
+
+  /* ── PAGE CONTENT ── */
+  .page { padding: 2rem; display: none; }
+  .page.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 2rem; }
+  .stat-card { background: white; border-radius: 14px; padding: 1.5rem; border: 1px solid var(--border); box-shadow: var(--card-shadow); }
+  .stat-card .sc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .stat-card .sc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .sc-icon.green { background: #e8f8f0; }
+  .sc-icon.blue { background: #e8f0fe; }
+  .sc-icon.gold { background: #fef8e8; }
+  .sc-icon.red { background: #fee8e8; }
+  .stat-card .sc-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+  .stat-card .sc-value { font-size: 2rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+  .stat-card .sc-change { font-size: 0.78rem; margin-top: 6px; }
+  .sc-change.up { color: var(--success); }
+  .sc-change.down { color: var(--danger); }
+
+  /* ── GRID LAYOUTS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  /* ── CARD ── */
+  .card { background: white; border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--card-shadow); overflow: hidden; }
+  .card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .card-header h3 { font-size: 0.95rem; font-weight: 600; }
+  .card-body { padding: 1.5rem; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 10px 16px; background: var(--bg); }
+  .data-table td { padding: 13px 16px; font-size: 0.88rem; border-top: 1px solid var(--border); vertical-align: middle; }
+  .data-table tr:hover td { background: var(--bg); }
+  .status-pill { padding: 3px 10px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; display: inline-block; }
+  .pill-green { background: #e8f8f0; color: #1a8a6e; }
+  .pill-amber { background: #fef8e8; color: #c9973d; }
+  .pill-red { background: #fee8e8; color: #c0392b; }
+  .pill-blue { background: #e8f0fe; color: #2c5fb5; }
+  .pill-gray { background: #f0f0f0; color: #666; }
+
+  /* ── MINI ACTION BTNS ── */
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+  .btn-danger { background: #fee; border: 1px solid #fcc; color: var(--danger); }
+
+  /* ── AVATAR ── */
+  .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+  .av-green { background: var(--accent); color: var(--primary); }
+  .av-blue { background: #e8f0fe; color: #2c5fb5; }
+  .av-gold { background: #fef8e8; color: var(--gold); }
+  .person-cell { display: flex; align-items: center; gap: 10px; }
+  .person-cell .pname { font-weight: 500; font-size: 0.88rem; }
+  .person-cell .pid { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── FORM CONTROLS ── */
+  select, input[type="text"], input[type="email"], input[type="date"], input[type="number"], textarea {
+    padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; background: white;
+    transition: border-color 0.2s; color: var(--text); width: 100%;
+  }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+  .form-group.full { grid-column: 1 / -1; }
+
+  /* ── CHARTS (CSS only) ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 10px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--primary); transition: height 0.5s; opacity: 0.8; }
+  .bar:hover { opacity: 1; }
+  .bar-label { font-size: 0.68rem; color: var(--text-muted); }
+  .bar-val { font-size: 0.72rem; font-weight: 600; color: var(--primary); }
+
+  /* ── DONUT CHART ── */
+  .donut-wrap { display: flex; align-items: center; gap: 2rem; }
+  .donut { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--primary) 0% 45%, #1a8a6e 45% 70%, var(--gold) 70% 85%, #e0e0e0 85% 100%); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+  .donut::after { content: ''; position: absolute; width: 72px; height: 72px; background: white; border-radius: 50%; }
+  .donut-center { position: absolute; z-index: 1; text-align: center; }
+  .donut-center .dc-num { font-size: 1.1rem; font-weight: 700; color: var(--dark); font-family: 'Playfair Display', serif; }
+  .donut-center .dc-label { font-size: 0.65rem; color: var(--text-muted); }
+  .donut-legend { display: grid; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── ACTIVITY FEED ── */
+  .activity-feed { display: grid; gap: 0; }
+  .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .act-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+  .act-text { flex: 1; }
+  .act-text .at-main { font-size: 0.85rem; font-weight: 500; }
+  .act-text .at-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .act-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; padding: 2rem; width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .modal p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--dark); color: white; padding: 12px 20px; border-radius: 10px; font-size: 0.88rem; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── CALENDAR ── */
+  .mini-cal { }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day-name { font-size: 0.68rem; text-align: center; color: var(--text-muted); padding: 4px 0; font-weight: 600; }
+  .cal-day { font-size: 0.78rem; text-align: center; padding: 6px 4px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+  .cal-day:hover { background: var(--accent); }
+  .cal-day.today { background: var(--primary); color: white; font-weight: 700; }
+  .cal-day.has-appt { background: #e8f8f0; color: var(--success); font-weight: 600; }
+  .cal-day.empty { pointer-events: none; }
+
+  @media (max-width: 1024px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="cross">+</div>
+      <span>MediCare Pro</span>
+    </div>
+    <h2>Admin Login</h2>
+    <p>Sign in to access the hospital management dashboard.</p>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="admin" value="admin">
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" value="admin123">
+    </div>
+    <p class="err" id="loginErr">❌ Invalid credentials. Try admin / admin123</p>
+    <button class="login-btn" onclick="doLogin()">Sign In to Dashboard</button>
+    <p class="login-hint">Use <strong>admin</strong> / <strong>admin123</strong> to login</p>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="cross">+</div>
+    <span class="brand">MediCare Pro</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Main</div>
+      <a class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" onclick="showPage('appointments',this)">
+        <span class="nav-icon">📅</span><span class="nav-label">Appointments</span>
+        <span class="nav-badge">12</span>
+      </a>
+      <a class="nav-item" onclick="showPage('patients',this)">
+        <span class="nav-icon">👥</span><span class="nav-label">Patients</span>
+      </a>
+      <a class="nav-item" onclick="showPage('doctors',this)">
+        <span class="nav-icon">👨‍⚕️</span><span class="nav-label">Doctors</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Medical</div>
+      <a class="nav-item" onclick="showPage('prescriptions',this)">
+        <span class="nav-icon">💊</span><span class="nav-label">Prescriptions</span>
+      </a>
+      <a class="nav-item" onclick="showPage('reports',this)">
+        <span class="nav-icon">📁</span><span class="nav-label">Reports & Labs</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Finance</div>
+      <a class="nav-item" onclick="showPage('billing',this)">
+        <span class="nav-icon">💳</span><span class="nav-label">Billing</span>
+      </a>
+      <a class="nav-item" onclick="showPage('analytics',this)">
+        <span class="nav-icon">📈</span><span class="nav-label">Analytics</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">System</div>
+      <a class="nav-item" onclick="showPage('settings',this)">
+        <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="su-avatar">AD</div>
+      <div class="su-info">
+        <div class="su-name">Admin User</div>
+        <div class="su-role">Super Admin</div>
+      </div>
+      <button id="toggleSidebar" onclick="toggleSidebar()" title="Collapse">◀</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="mainContent">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="topbar-actions">
+      <div class="topbar-search">
+        <span>🔍</span>
+        <input type="text" placeholder="Search patients, doctors...">
+      </div>
+      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+      <button class="icon-btn">✉️</button>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ DASHBOARD PAGE ═══════════ -->
+  <div class="page active" id="page-dashboard">
+    <div style="padding: 2rem;">
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="sc-top">
+            <div>
+              <div class="sc-label">Total Patients</div>
+              <div class="sc-value">8,492</div>
+              <div class="sc-change up">↑ 12% this month</div>
+            </div>
+            <div class="sc-icon green">👥</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top">
+            <div>
+              <div class="sc-label">Today's Appointments</div>
+              <div class="sc-value">147</div>
+              <div class="sc-change up">↑ 8% vs yesterday</div>
+            </div>
+            <div class="sc-icon blue">📅</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top">
+            <div>
+              <div class="sc-label">Active Doctors</div>
+              <div class="sc-value">34</div>
+              <div class="sc-change down">3 on leave today</div>
+            </div>
+            <div class="sc-icon gold">👨‍⚕️</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top">
+            <div>
+              <div class="sc-label">Monthly Revenue</div>
+              <div class="sc-value">₨2.4M</div>
+              <div class="sc-change up">↑ 18% vs last month</div>
+            </div>
+            <div class="sc-icon red">💰</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <h3>Weekly Appointments</h3>
+            <select style="width:auto; padding: 6px 10px; font-size: 0.78rem;">
+              <option>This Week</option><option>Last Week</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart">
+              <div class="bar-wrap"><div class="bar-val">82</div><div class="bar" style="height:68%"></div><div class="bar-label">Mon</div></div>
+              <div class="bar-wrap"><div class="bar-val">95</div><div class="bar" style="height:79%"></div><div class="bar-label">Tue</div></div>
+              <div class="bar-wrap"><div class="bar-val">110</div><div class="bar" style="height:92%"></div><div class="bar-label">Wed</div></div>
+              <div class="bar-wrap"><div class="bar-val">78</div><div class="bar" style="height:65%"></div><div class="bar-label">Thu</div></div>
+              <div class="bar-wrap"><div class="bar-val">120</div><div class="bar" style="height:100%"></div><div class="bar-label">Fri</div></div>
+              <div class="bar-wrap"><div class="bar-val">65</div><div class="bar" style="height:54%; opacity:0.5"></div><div class="bar-label">Sat</div></div>
+              <div class="bar-wrap"><div class="bar-val">40</div><div class="bar" style="height:33%; opacity:0.4"></div><div class="bar-label">Sun</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Appointments by Department</h3></div>
+          <div class="card-body">
+            <div class="donut-wrap">
+              <div class="donut">
+                <div class="donut-center">
+                  <div class="dc-num">590</div>
+                  <div class="dc-label">Total</div>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div>Cardiology — 45%</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#1a8a6e"></div>Neurology — 25%</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Orthopedics — 15%</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#e0e0e0"></div>Others — 15%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Appointments</h3>
+            <button class="btn btn-outline btn-sm" onclick="showPage('appointments', document.querySelector('[onclick*=appointments]'))">View All</button>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Patient</th><th>Doctor</th><th>Time</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><div class="person-cell"><div class="av av-green">RS</div><div><div class="pname">Ram Shrestha</div><div class="pid">#P-001</div></div></div></td><td>Dr. Sharma</td><td>10:00 AM</td><td><span class="status-pill pill-green">Confirmed</span></td></tr>
+              <tr><td><div class="person-cell"><div class="av av-blue">SG</div><div><div class="pname">Sita Gurung</div><div class="pid">#P-002</div></div></div></td><td>Dr. Thapa</td><td>11:30 AM</td><td><span class="status-pill pill-green">Confirmed</span></td></tr>
+              <tr><td><div class="person-cell"><div class="av av-gold">HB</div><div><div class="pname">Hari Bahadur</div><div class="pid">#P-003</div></div></div></td><td>Dr. Patel</td><td>02:00 PM</td><td><span class="status-pill pill-amber">Pending</span></td></tr>
+              <tr><td><div class="person-cell"><div class="av av-green">MT</div><div><div class="pname">Maya Tamang</div><div class="pid">#P-004</div></div></div></td><td>Dr. Khan</td><td>03:30 PM</td><td><span class="status-pill pill-red">Cancelled</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Recent Activity</h3></div>
+          <div class="card-body" style="padding: 0 1.5rem;">
+            <div class="activity-feed">
+              <div class="activity-item">
+                <div class="act-icon" style="background:#e8f8f0">📅</div>
+                <div class="act-text"><div class="at-main">New appointment booked</div><div class="at-sub">Ram Shrestha → Dr. Sharma</div></div>
+                <div class="act-time">2m ago</div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#e8f0fe">💊</div>
+                <div class="act-text"><div class="at-main">Prescription issued</div><div class="at-sub">Atorvastatin 10mg — Patient #P-001</div></div>
+                <div class="act-time">18m ago</div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#fef8e8">📁</div>
+                <div class="act-text"><div class="at-main">Lab report uploaded</div><div class="at-sub">CBC Report — Sita Gurung</div></div>
+                <div class="act-time">45m ago</div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#fee8e8">💳</div>
+                <div class="act-text"><div class="at-main">Payment received</div><div class="at-sub">NPR 3,500 — Premium Plan</div></div>
+                <div class="act-time">1h ago</div>
+              </div>
+              <div class="activity-item">
+                <div class="act-icon" style="background:#e8f8f0">👥</div>
+                <div class="act-text"><div class="at-main">New patient registered</div><div class="at-sub">Bikash Thapa — #P-892</div></div>
+                <div class="act-time">2h ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ APPOINTMENTS PAGE ═══════════ -->
+  <div class="page" id="page-appointments">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-size:1.2rem; font-weight:600;">All Appointments</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Manage and track all patient appointments</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addApptModal')">+ New Appointment</button>
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:1.5rem; flex-wrap:wrap;">
+        <select style="width:auto;"><option>All Doctors</option><option>Dr. Sharma</option><option>Dr. Patel</option><option>Dr. Khan</option><option>Dr. Thapa</option></select>
+        <select style="width:auto;"><option>All Status</option><option>Confirmed</option><option>Pending</option><option>Cancelled</option></select>
+        <input type="date" style="width:auto;" value="2025-04-26">
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date & Time</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="apptTableBody">
+            <tr><td>#A-001</td><td><div class="person-cell"><div class="av av-green">RS</div><div><div class="pname">Ram Shrestha</div></div></div></td><td>Dr. Sharma</td><td>Apr 26 · 10:00 AM</td><td><span class="status-pill pill-blue">Cardiology</span></td><td><span class="status-pill pill-green">Confirmed</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing appointment...')">Edit</button></td></tr>
+            <tr><td>#A-002</td><td><div class="person-cell"><div class="av av-blue">SG</div><div><div class="pname">Sita Gurung</div></div></div></td><td>Dr. Thapa</td><td>Apr 26 · 11:30 AM</td><td><span class="status-pill pill-blue">OB/GYN</span></td><td><span class="status-pill pill-green">Confirmed</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing appointment...')">Edit</button></td></tr>
+            <tr><td>#A-003</td><td><div class="person-cell"><div class="av av-gold">HB</div><div><div class="pname">Hari Bahadur</div></div></div></td><td>Dr. Patel</td><td>Apr 26 · 02:00 PM</td><td><span class="status-pill pill-blue">Neurology</span></td><td><span class="status-pill pill-amber">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing appointment...')">Edit</button></td></tr>
+            <tr><td>#A-004</td><td><div class="person-cell"><div class="av av-green">MT</div><div><div class="pname">Maya Tamang</div></div></div></td><td>Dr. Khan</td><td>Apr 26 · 03:30 PM</td><td><span class="status-pill pill-blue">Orthopedics</span></td><td><span class="status-pill pill-red">Cancelled</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing appointment...')">Edit</button></td></tr>
+            <tr><td>#A-005</td><td><div class="person-cell"><div class="av av-blue">BT</div><div><div class="pname">Bikash Thapa</div></div></div></td><td>Dr. Sharma</td><td>Apr 26 · 04:00 PM</td><td><span class="status-pill pill-blue">Cardiology</span></td><td><span class="status-pill pill-green">Confirmed</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing appointment...')">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ PATIENTS PAGE ═══════════ -->
+  <div class="page" id="page-patients">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-size:1.2rem; font-weight:600;">Patient Management</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">8,492 registered patients</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addPatientModal')">+ Add Patient</button>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Patient</th><th>ID</th><th>Age/Gender</th><th>Phone</th><th>Last Visit</th><th>Doctor</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><div class="person-cell"><div class="av av-green">RS</div><div><div class="pname">Ram Shrestha</div><div class="pid">ram@email.com</div></div></div></td><td>#P-001</td><td>34 / M</td><td>9801234567</td><td>Apr 12, 2025</td><td>Dr. Sharma</td><td><span class="status-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Viewing patient record...')">View</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-blue">SG</div><div><div class="pname">Sita Gurung</div><div class="pid">sita@email.com</div></div></div></td><td>#P-002</td><td>28 / F</td><td>9807654321</td><td>Apr 18, 2025</td><td>Dr. Thapa</td><td><span class="status-pill pill-green">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Viewing patient record...')">View</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-gold">HB</div><div><div class="pname">Hari Bahadur</div><div class="pid">hari@email.com</div></div></div></td><td>#P-003</td><td>52 / M</td><td>9812345678</td><td>Mar 30, 2025</td><td>Dr. Patel</td><td><span class="status-pill pill-amber">Follow-up</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Viewing patient record...')">View</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-green">MT</div><div><div class="pname">Maya Tamang</div><div class="pid">maya@email.com</div></div></div></td><td>#P-004</td><td>41 / F</td><td>9845678901</td><td>Feb 22, 2025</td><td>Dr. Khan</td><td><span class="status-pill pill-gray">Inactive</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Viewing patient record...')">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ DOCTORS PAGE ═══════════ -->
+  <div class="page" id="page-doctors">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-size:1.2rem; font-weight:600;">Doctor Management</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">34 active doctors</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addDoctorModal')">+ Add Doctor</button>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Doctor</th><th>Specialty</th><th>Qualification</th><th>Experience</th><th>Patients</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><div class="person-cell"><div class="av av-green">RS</div><div><div class="pname">Dr. Rajesh Sharma</div><div class="pid">rajesh@medicarepro.np</div></div></div></td><td>Cardiology</td><td>MBBS, MD, DM</td><td>18 yrs</td><td>2,140</td><td>⭐ 4.9</td><td><span class="status-pill pill-green">On Duty</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing doctor profile...')">Edit</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-blue">PP</div><div><div class="pname">Dr. Priya Patel</div><div class="pid">priya@medicarepro.np</div></div></div></td><td>Neurology</td><td>MBBS, MS, MCh</td><td>12 yrs</td><td>1,890</td><td>⭐ 4.8</td><td><span class="status-pill pill-green">On Duty</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing doctor profile...')">Edit</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-gold">AK</div><div><div class="pname">Dr. Amir Khan</div><div class="pid">amir@medicarepro.np</div></div></div></td><td>Orthopedics</td><td>MBBS, DO, FICS</td><td>15 yrs</td><td>3,200</td><td>⭐ 4.9</td><td><span class="status-pill pill-amber">On Leave</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing doctor profile...')">Edit</button></td></tr>
+            <tr><td><div class="person-cell"><div class="av av-green">ST</div><div><div class="pname">Dr. Sunita Thapa</div><div class="pid">sunita@medicarepro.np</div></div></div></td><td>Gynecology</td><td>MBBS, MS (OBG)</td><td>10 yrs</td><td>2,600</td><td>⭐ 5.0</td><td><span class="status-pill pill-green">On Duty</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Editing doctor profile...')">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ PRESCRIPTIONS PAGE ═══════════ -->
+  <div class="page" id="page-prescriptions">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div><h2 style="font-size:1.2rem; font-weight:600;">Prescriptions</h2><p style="color:var(--text-muted); font-size:0.85rem;">Active and past prescriptions</p></div>
+        <button class="btn btn-primary" onclick="showToast('Opening new prescription form...')">+ New Prescription</button>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Rx ID</th><th>Patient</th><th>Doctor</th><th>Medication</th><th>Dosage</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>#Rx-101</td><td>Ram Shrestha</td><td>Dr. Sharma</td><td>Atorvastatin</td><td>10mg · Once daily</td><td>Apr 12, 2025</td><td><span class="status-pill pill-green">Active</span></td></tr>
+            <tr><td>#Rx-102</td><td>Sita Gurung</td><td>Dr. Thapa</td><td>Folic Acid</td><td>5mg · Once daily</td><td>Apr 18, 2025</td><td><span class="status-pill pill-green">Active</span></td></tr>
+            <tr><td>#Rx-103</td><td>Hari Bahadur</td><td>Dr. Patel</td><td>Levetiracetam</td><td>500mg · Twice daily</td><td>Mar 30, 2025</td><td><span class="status-pill pill-amber">Review Due</span></td></tr>
+            <tr><td>#Rx-104</td><td>Maya Tamang</td><td>Dr. Khan</td><td>Ibuprofen</td><td>400mg · As needed</td><td>Feb 22, 2025</td><td><span class="status-pill pill-gray">Completed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ REPORTS PAGE ═══════════ -->
+  <div class="page" id="page-reports">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div><h2 style="font-size:1.2rem; font-weight:600;">Reports & Lab Results</h2><p style="color:var(--text-muted); font-size:0.85rem;">Upload and manage diagnostic reports</p></div>
+        <button class="btn btn-primary" onclick="showToast('Opening file upload dialog...')">📤 Upload Report</button>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Report</th><th>Patient</th><th>Type</th><th>Ordered By</th><th>Date</th><th>Result</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td>CBC Blood Panel</td><td>Ram Shrestha</td><td><span class="status-pill pill-blue">Lab</span></td><td>Dr. Sharma</td><td>Apr 12, 2025</td><td><span class="status-pill pill-green">Normal</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Opening report...')">View</button></td></tr>
+            <tr><td>Cardiac Stress Test</td><td>Ram Shrestha</td><td><span class="status-pill pill-blue">Diagnostic</span></td><td>Dr. Sharma</td><td>Mar 28, 2025</td><td><span class="status-pill pill-green">Normal</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Opening report...')">View</button></td></tr>
+            <tr><td>MRI Brain Scan</td><td>Hari Bahadur</td><td><span class="status-pill pill-blue">Imaging</span></td><td>Dr. Patel</td><td>Mar 30, 2025</td><td><span class="status-pill pill-amber">Review</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Opening report...')">View</button></td></tr>
+            <tr><td>Ultrasound Scan</td><td>Sita Gurung</td><td><span class="status-pill pill-blue">Imaging</span></td><td>Dr. Thapa</td><td>Apr 18, 2025</td><td><span class="status-pill pill-green">Normal</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Opening report...')">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ BILLING PAGE ═══════════ -->
+  <div class="page" id="page-billing">
+    <div style="padding: 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div><h2 style="font-size:1.2rem; font-weight:600;">Billing & Invoices</h2><p style="color:var(--text-muted); font-size:0.85rem;">Manage payments and generate invoices</p></div>
+        <button class="btn btn-primary" onclick="showToast('Creating new invoice...')">+ New Invoice</button>
+      </div>
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Total Revenue (Month)</div><div class="sc-value">₨2.4M</div><div class="sc-change up">↑ 18%</div></div><div class="sc-icon green">💰</div></div></div>
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Pending Payments</div><div class="sc-value">₨82K</div><div class="sc-change down">14 invoices</div></div><div class="sc-icon red">⏳</div></div></div>
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Paid This Month</div><div class="sc-value">423</div><div class="sc-change up">Invoices settled</div></div><div class="sc-icon blue">✅</div></div></div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Invoice #</th><th>Patient</th><th>Service</th><th>Amount</th><th>Date</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td>#INV-2025-001</td><td>Ram Shrestha</td><td>Cardiology Consult</td><td>NPR 2,000</td><td>Apr 12, 2025</td><td>Online</td><td><span class="status-pill pill-green">Paid</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Downloading invoice PDF...')">PDF</button></td></tr>
+            <tr><td>#INV-2025-002</td><td>Sita Gurung</td><td>Premium Plan</td><td>NPR 3,500</td><td>Apr 18, 2025</td><td>Card</td><td><span class="status-pill pill-green">Paid</span></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Downloading invoice PDF...')">PDF</button></td></tr>
+            <tr><td>#INV-2025-003</td><td>Hari Bahadur</td><td>MRI + Consult</td><td>NPR 8,500</td><td>Mar 30, 2025</td><td>—</td><td><span class="status-pill pill-amber">Pending</span></td><td><button class="btn btn-sm btn-primary" onclick="showToast('Sending payment reminder...')">Remind</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ ANALYTICS PAGE ═══════════ -->
+  <div class="page" id="page-analytics">
+    <div style="padding: 2rem;">
+      <h2 style="font-size:1.2rem; font-weight:600; margin-bottom:1.5rem;">Analytics & Reports</h2>
+      <div class="stats-row">
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">New Patients (Month)</div><div class="sc-value">342</div><div class="sc-change up">↑ 12%</div></div><div class="sc-icon green">👥</div></div></div>
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Avg. Wait Time</div><div class="sc-value">12m</div><div class="sc-change up">↓ 3m improved</div></div><div class="sc-icon blue">⏱️</div></div></div>
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Satisfaction Score</div><div class="sc-value">4.8</div><div class="sc-change up">/ 5.0 stars</div></div><div class="sc-icon gold">⭐</div></div></div>
+        <div class="stat-card"><div class="sc-top"><div><div class="sc-label">Bed Occupancy</div><div class="sc-value">78%</div><div class="sc-change down">High demand</div></div><div class="sc-icon red">🛏️</div></div></div>
+      </div>
+      <div class="two-col">
+        <div class="card"><div class="card-header"><h3>Monthly Revenue Trend</h3></div><div class="card-body">
+          <div class="bar-chart" style="height:150px">
+            <div class="bar-wrap"><div class="bar-val">1.8M</div><div class="bar" style="height:75%"></div><div class="bar-label">Nov</div></div>
+            <div class="bar-wrap"><div class="bar-val">2.0M</div><div class="bar" style="height:83%"></div><div class="bar-label">Dec</div></div>
+            <div class="bar-wrap"><div class="bar-val">1.6M</div><div class="bar" style="height:67%"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-wrap"><div class="bar-val">1.9M</div><div class="bar" style="height:79%"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-wrap"><div class="bar-val">2.1M</div><div class="bar" style="height:88%"></div><div class="bar-label">Mar</div></div>
+            <div class="bar-wrap"><div class="bar-val">2.4M</div><div class="bar" style="height:100%"></div><div class="bar-label">Apr</div></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card-header"><h3>Top Performing Doctors</h3></div><div class="card-body">
+          <div style="display:grid; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><div class="person-cell"><div class="av av-green">RS</div><div><div class="pname">Dr. Sharma</div><div class="pid">Cardiology</div></div></div><div style="text-align:right"><div style="font-weight:600">142 pts</div><div style="font-size:0.75rem; color:var(--text-muted)">⭐ 4.9</div></div></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><div class="person-cell"><div class="av av-blue">ST</div><div><div class="pname">Dr. Thapa</div><div class="pid">Gynecology</div></div></div><div style="text-align:right"><div style="font-weight:600">118 pts</div><div style="font-size:0.75rem; color:var(--text-muted)">⭐ 5.0</div></div></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><div class="person-cell"><div class="av av-gold">AK</div><div><div class="pname">Dr. Khan</div><div class="pid">Orthopedics</div></div></div><div style="text-align:right"><div style="font-weight:600">104 pts</div><div style="font-size:0.75rem; color:var(--text-muted)">⭐ 4.9</div></div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SETTINGS PAGE ═══════════ -->
+  <div class="page" id="page-settings">
+    <div style="padding: 2rem;">
+      <h2 style="font-size:1.2rem; font-weight:600; margin-bottom:1.5rem;">System Settings</h2>
+      <div class="two-col">
+        <div class="card"><div class="card-header"><h3>Hospital Information</h3></div><div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Hospital Name</label><input type="text" value="MediCare Pro Hospital"></div>
+            <div class="form-group"><label>License No.</label><input type="text" value="HP-2024-0892"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px"><label>Address</label><input type="text" value="Kathmandu, Nepal"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Phone</label><input type="text" value="+977 1 4200000"></div>
+            <div class="form-group"><label>Email</label><input type="email" value="info@medicarepro.np"></div>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('✓ Settings saved successfully!')">Save Changes</button>
+        </div></div>
+        <div class="card"><div class="card-header"><h3>Notification Settings</h3></div><div class="card-body">
+          <div style="display:grid; gap:14px;">
+            <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; cursor:pointer;">Email appointment confirmations <input type="checkbox" checked></label>
+            <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; cursor:pointer;">SMS reminders to patients <input type="checkbox" checked></label>
+            <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; cursor:pointer;">Admin alert on cancellation <input type="checkbox" checked></label>
+            <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; cursor:pointer;">Daily analytics report email <input type="checkbox"></label>
+            <label style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; cursor:pointer;">Emergency alert system <input type="checkbox" checked></label>
+          </div>
+          <button class="btn btn-primary" style="margin-top:1.2rem;" onclick="showToast('✓ Notification preferences saved!')">Save Preferences</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mainContent -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="addApptModal" onclick="if(event.target===this)closeModal('addApptModal')">
+  <div class="modal">
+    <h3>New Appointment</h3>
+    <p>Fill in the details to schedule a new appointment.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Patient Name</label><input type="text" placeholder="Full name"></div>
+      <div class="form-group"><label>Doctor</label><select><option>Dr. Sharma — Cardiology</option><option>Dr. Patel — Neurology</option><option>Dr. Khan — Orthopedics</option><option>Dr. Thapa — Gynecology</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input type="date"></div>
+      <div class="form-group"><label>Time</label><select><option>09:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>02:00 PM</option><option>03:00 PM</option></select></div>
+    </div>
+    <div class="form-group full" style="margin-bottom:14px"><label>Notes</label><textarea placeholder="Reason for visit..." style="min-height:70px"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addApptModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('addApptModal'); showToast('✓ Appointment created and confirmation sent!')">Create Appointment</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addPatientModal" onclick="if(event.target===this)closeModal('addPatientModal')">
+  <div class="modal">
+    <h3>Register New Patient</h3>
+    <p>Enter the patient's details to create their profile.</p>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input type="text" placeholder="Ram"></div>
+      <div class="form-group"><label>Last Name</label><input type="text" placeholder="Shrestha"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date of Birth</label><input type="date"></div>
+      <div class="form-group"><label>Gender</label><select><option>Male</option><option>Female</option><option>Other</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input type="text" placeholder="+977 9800000000"></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="patient@email.com"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addPatientModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('addPatientModal'); showToast('✓ Patient registered! ID assigned: #P-893')">Register Patient</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addDoctorModal" onclick="if(event.target===this)closeModal('addDoctorModal')">
+  <div class="modal">
+    <h3>Add New Doctor</h3>
+    <p>Fill in the doctor's professional details.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Full Name</label><input type="text" placeholder="Dr. Full Name"></div>
+      <div class="form-group"><label>Specialty</label><select><option>Cardiology</option><option>Neurology</option><option>Orthopedics</option><option>Gynecology</option><option>Pediatrics</option><option>Oncology</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Qualification</label><input type="text" placeholder="MBBS, MD"></div>
+      <div class="form-group"><label>Experience (Years)</label><input type="number" placeholder="10"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" placeholder="doctor@medicarepro.np"></div>
+      <div class="form-group"><label>Phone</label><input type="text" placeholder="+977 9800000000"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addDoctorModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('addDoctorModal'); showToast('✓ Doctor profile created successfully!')">Add Doctor</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // LOGIN
+  function doLogin() {
+    const u = document.getElementById('loginUser').value;
+    const p = document.getElementById('loginPass').value;
+    const err = document.getElementById('loginErr');
+    if (u === 'admin' && p === 'admin123') {
+      document.getElementById('loginScreen').style.display = 'none';
+    } else {
+      err.style.display = 'block';
+    }
+  }
+  document.getElementById('loginPass').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+
+  // LOGOUT
+  function doLogout() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginUser').value = 'admin';
+    document.getElementById('loginPass').value = 'admin123';
+    document.getElementById('loginErr').style.display = 'none';
+  }
+
+  // SIDEBAR
+  let collapsed = false;
+  function toggleSidebar() {
+    collapsed = !collapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', collapsed);
+    document.getElementById('mainContent').classList.toggle('expanded', collapsed);
+    document.getElementById('toggleSidebar').textContent = collapsed ? '▶' : '◀';
+  }
+
+  // PAGE NAVIGATION
+  function showPage(pageId, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    if (el) el.classList.add('active');
+    const titles = { dashboard:'Dashboard', appointments:'Appointments', patients:'Patients', doctors:'Doctors', prescriptions:'Prescriptions', reports:'Reports & Labs', billing:'Billing', analytics:'Analytics', settings:'Settings' };
+    document.getElementById('pageTitle').textContent = titles[pageId] || pageId;
+  }
+
+  // MODALS
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // TOAST
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
